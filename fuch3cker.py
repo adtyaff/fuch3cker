@@ -10,6 +10,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+
 def tampil_logo():
     logo = pyfiglet.figlet_format("FuCH3CKeR", font="slant")
     header = (
@@ -18,23 +19,22 @@ def tampil_logo():
         f"{Style.BRIGHT}Last Update: 2024-10-01{Style.RESET_ALL}\n"
     )
     print(header)
-    
+
+
 def reset_clear():
-    if os.name == 'posix':
-        _ = os.system('clear')
+    if os.name == "posix":
+        _ = os.system("clear")
     else:
-        _ = os.system('cls')
+        _ = os.system("cls")
+
 
 def cek_sendgrid_kuota(apikey, verbose=True):
     if verbose:
         print(f"{Fore.CYAN}[INFO] Checking.... {Style.RESET_ALL}")
 
     url = "https://api.sendgrid.com/v3/user/credits"
-    headers = {
-        "Authorization": f"Bearer {apikey}",
-        "Content-Type": "application/json"
-    }
-    
+    headers = {"Authorization": f"Bearer {apikey}", "Content-Type": "application/json"}
+
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
@@ -51,7 +51,7 @@ def cek_sendgrid_kuota(apikey, verbose=True):
             f"{Style.BRIGHT}Reset Frequency: {Style.RESET_ALL}{reset_frek}\n"
         )
         result += "-" * 40
-        
+
         if verbose:
             print(f"{Fore.GREEN}[SIP] API Key SendGrid beres dicek!{Style.RESET_ALL}")
         return True, result
@@ -65,24 +65,29 @@ def cek_sendgrid_kuota(apikey, verbose=True):
             f"{Style.BRIGHT}Pesan Error: {Style.RESET_ALL}{e.response.text}\n"
         )
         error_message += "-" * 40
-        
+
         if verbose:
-            print(f"{Fore.RED}[ERROR] Ada masalah! Status Code {status_code}{Style.RESET_ALL}")
+            print(
+                f"{Fore.RED}[ERROR] Ada masalah! Status Code {status_code}{Style.RESET_ALL}"
+            )
         return False, error_message
+
 
 def cek_twilio_info(account_sid, auth_token, verbose=True):
     if verbose:
         print(f"{Fore.CYAN}[INFO] Checking.... {Style.RESET_ALL}")
-    
+
     try:
         client = Client(account_sid, auth_token)
-        balance_url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Balance.json"
+        balance_url = (
+            f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Balance.json"
+        )
         balance_response = requests.get(balance_url, auth=(account_sid, auth_token))
-        
+
         if balance_response.status_code == 200:
             balance_data = balance_response.json()
-            saldo = balance_data['balance']
-            mata_uang = balance_data['currency']
+            saldo = balance_data["balance"]
+            mata_uang = balance_data["currency"]
         else:
             saldo = "Tidak ketahuan"
             mata_uang = "Tidak ketahuan"
@@ -102,7 +107,7 @@ def cek_twilio_info(account_sid, auth_token, verbose=True):
         )
         result += "\n".join([f" - {nomor}" for nomor in nomor_list]) + "\n"
         result += "-" * 40
-        
+
         if verbose:
             print(f"{Fore.GREEN}[SIP] Twilio udah beres dicek!{Style.RESET_ALL}")
         return True, result
@@ -117,10 +122,11 @@ def cek_twilio_info(account_sid, auth_token, verbose=True):
             f"{Style.BRIGHT}Pesan Error: {Style.RESET_ALL}{e.msg}\n"
         )
         error_message += "-" * 40
-        
+
         if verbose:
             print(f"{Fore.RED}[ERROR] Masalah! Status Code {e.status}{Style.RESET_ALL}")
         return False, error_message
+
 
 def cek_aws_ses_limit(aws_access_key, aws_secret_key, region, verbose=True):
     if verbose:
@@ -128,10 +134,10 @@ def cek_aws_ses_limit(aws_access_key, aws_secret_key, region, verbose=True):
 
     try:
         client = boto3.client(
-            'ses',
+            "ses",
             aws_access_key_id=aws_access_key,
             aws_secret_access_key=aws_secret_key,
-            region_name=region
+            region_name=region,
         )
 
         send_quota = client.get_send_quota()
@@ -147,7 +153,7 @@ def cek_aws_ses_limit(aws_access_key, aws_secret_key, region, verbose=True):
             f"{Style.BRIGHT}SentLast24Hours: {Style.RESET_ALL}{send_quota['SentLast24Hours']}\n"
         )
         result += "-" * 40
-        
+
         if verbose:
             print(f"{Fore.GREEN}[SIP] AWS SES sukses dicek!{Style.RESET_ALL}")
         return True, result
@@ -162,38 +168,43 @@ def cek_aws_ses_limit(aws_access_key, aws_secret_key, region, verbose=True):
             f"{Style.BRIGHT}Pesan Error: {Style.RESET_ALL}{e.response['Error']['Message']}\n"
         )
         error_message += "-" * 40
-        
+
         if verbose:
-            print(f"{Fore.RED}[ERROR] Gagal, Error: {e.response['Error']['Code']}{Style.RESET_ALL}")
+            print(
+                f"{Fore.RED}[ERROR] Gagal, Error: {e.response['Error']['Code']}{Style.RESET_ALL}"
+            )
         return False, error_message
 
-def create_smtp_and_test_email(aws_access_key, aws_secret_key, region, test_email, verbose=True):
+
+def create_smtp_and_test_email(
+    aws_access_key, aws_secret_key, region, test_email, verbose=True
+):
     if verbose:
         print(f"{Fore.CYAN}[INFO] Creating.... {Style.RESET_ALL}")
-    
+
     try:
         client = boto3.client(
-            'ses',
+            "ses",
             aws_access_key_id=aws_access_key,
             aws_secret_access_key=aws_secret_key,
-            region_name=region
+            region_name=region,
         )
 
         response = client.create_smtp_credentials()
-        smtp_username = response['SmtpUsername']
-        smtp_password = response['SmtpPassword']
-        
+        smtp_username = response["SmtpUsername"]
+        smtp_password = response["SmtpPassword"]
+
         email_from = client.get_identity_mail_from_domain_attributes()
 
         message = MIMEMultipart()
-        message['From'] = email_from
-        message['To'] = test_email
-        message['Subject'] = 'FuCH3KeR - adtyaF'
+        message["From"] = email_from
+        message["To"] = test_email
+        message["Subject"] = "FuCH3KeR - adtyaF"
 
         body = "Test Email"
-        message.attach(MIMEText(body, 'plain'))
+        message.attach(MIMEText(body, "plain"))
 
-        with smtplib.SMTP('email-smtp.' + region + '.amazonaws.com', 587) as server:
+        with smtplib.SMTP("email-smtp." + region + ".amazonaws.com", 587) as server:
             server.starttls()
             server.login(smtp_username, smtp_password)
             server.sendmail(email_from, test_email, message.as_string())
@@ -204,7 +215,7 @@ def create_smtp_and_test_email(aws_access_key, aws_secret_key, region, test_emai
             f"{Style.BRIGHT}From Email: {Style.RESET_ALL}{email_from}\n"
             f"{Style.BRIGHT}Port: {Style.RESET_ALL}587\n"
         )
-        
+
         if verbose:
             print(f"{Fore.GREEN}[SIP] Sukses Test Send!{Style.RESET_ALL}")
         return True, result
@@ -219,10 +230,13 @@ def create_smtp_and_test_email(aws_access_key, aws_secret_key, region, test_emai
             f"{Style.BRIGHT}Pesan Error: {Style.RESET_ALL}{e.response['Error']['Message']}\n"
         )
         error_message += "-" * 40
-        
+
         if verbose:
-            print(f"{Fore.RED}[ERROR] Gagal buat SMTP: {e.response['Error']['Code']}{Style.RESET_ALL}")
+            print(
+                f"{Fore.RED}[ERROR] Gagal buat SMTP: {e.response['Error']['Code']}{Style.RESET_ALL}"
+            )
         return False, error_message
+
 
 def main():
     reset_clear()
@@ -230,50 +244,78 @@ def main():
     print(Fore.YELLOW + Style.BRIGHT + "Mau cek apa?" + Style.RESET_ALL)
     print(f"Ketik '{Fore.YELLOW}{Style.BRIGHT}sg{Style.RESET_ALL}' untuk cek SendGrid")
     print(f"Ketik '{Fore.YELLOW}{Style.BRIGHT}tw{Style.RESET_ALL}' untuk cek Twilio")
-    print(f"Ketik '{Fore.YELLOW}{Style.BRIGHT}ses{Style.RESET_ALL}' untuk cek Amazon SES")
-    print(f"Ketik '{Fore.YELLOW}{Style.BRIGHT}iam{Style.RESET_ALL}' untuk cek IAM Permissions")
-    print(f"Ketik '{Fore.YELLOW}{Style.BRIGHT}cses{Style.RESET_ALL}' untuk buat kredensial SMTP SES + Test Send Email")
+    print(
+        f"Ketik '{Fore.YELLOW}{Style.BRIGHT}ses{Style.RESET_ALL}' untuk cek Amazon SES"
+    )
+    print(
+        f"Ketik '{Fore.YELLOW}{Style.BRIGHT}iam{Style.RESET_ALL}' untuk cek IAM Permissions"
+    )
+    print(
+        f"Ketik '{Fore.YELLOW}{Style.BRIGHT}cses{Style.RESET_ALL}' untuk buat kredensial SMTP SES + Test Send Email"
+    )
     print(f"Ketik '{Fore.RED}{Style.BRIGHT}keluar{Style.RESET_ALL}' kalo mau cabut")
 
-    pilihan = input(Fore.YELLOW + Style.BRIGHT + "\nPilih Checker: " + Style.RESET_ALL).lower()
+    pilihan = input(
+        Fore.YELLOW + Style.BRIGHT + "\nPilih Checker: " + Style.RESET_ALL
+    ).lower()
 
     if pilihan == "sg":
         reset_clear()
         tampil_logo()
-        opsi = input(Style.BRIGHT + "Mau cek 'ecer' satu-satu, atau 'bulk' langsung dari list?: " + Style.RESET_ALL).lower()
+        opsi = input(
+            Style.BRIGHT
+            + "Mau cek 'ecer' satu-satu, atau 'bulk' langsung dari list?: "
+            + Style.RESET_ALL
+        ).lower()
         if opsi == "ecer":
             apikey = input(Style.BRIGHT + "SendGrid API Key: " + Style.RESET_ALL)
             status, result = cek_sendgrid_kuota(apikey)
             simpan_output("res_sendgrid", status, result)
         elif opsi == "bulk":
-            filename = input(Style.BRIGHT + "list? (contoh: list_sendgrid.txt): " + Style.RESET_ALL)
+            filename = input(
+                Style.BRIGHT + "list? (contoh: list_sendgrid.txt): " + Style.RESET_ALL
+            )
             cek_bulk_sendgrid(filename)
 
     elif pilihan == "tw":
         reset_clear()
         tampil_logo()
-        opsi = input(Style.BRIGHT + "Mau cek 'ecer' satu-satu, atau 'bulk' langsung dari list?: " + Style.RESET_ALL).lower()
+        opsi = input(
+            Style.BRIGHT
+            + "Mau cek 'ecer' satu-satu, atau 'bulk' langsung dari list?: "
+            + Style.RESET_ALL
+        ).lower()
         if opsi == "ecer":
             account_sid = input(Style.BRIGHT + "Twilio Account SID: " + Style.RESET_ALL)
             auth_token = input(Style.BRIGHT + "Twilio Auth Token: " + Style.RESET_ALL)
             status, result = cek_twilio_info(account_sid, auth_token)
             simpan_output("res_twilio", status, result)
         elif opsi == "bulk":
-            filename = input(Style.BRIGHT + "list? (contoh: list_twilio.txt): " + Style.RESET_ALL)
+            filename = input(
+                Style.BRIGHT + "list? (contoh: list_twilio.txt): " + Style.RESET_ALL
+            )
             cek_bulk_twilio(filename)
 
     elif pilihan == "ses":
         reset_clear()
         tampil_logo()
-        opsi = input(Style.BRIGHT + "Mau cek 'ecer' satu-satu, atau 'bulk' langsung dari list?: " + Style.RESET_ALL).lower()
+        opsi = input(
+            Style.BRIGHT
+            + "Mau cek 'ecer' satu-satu, atau 'bulk' langsung dari list?: "
+            + Style.RESET_ALL
+        ).lower()
         if opsi == "ecer":
             aws_key = input(Style.BRIGHT + "AWS Access Key: " + Style.RESET_ALL)
             aws_secret = input(Style.BRIGHT + "AWS Secret Key: " + Style.RESET_ALL)
-            aws_region = input(Style.BRIGHT + "AWS Region (contoh: us-east-1): " + Style.RESET_ALL)
+            aws_region = input(
+                Style.BRIGHT + "AWS Region (contoh: us-east-1): " + Style.RESET_ALL
+            )
             status, result = cek_aws_ses_limit(aws_key, aws_secret, aws_region)
             simpan_output("res_amzses", status, result)
         elif opsi == "bulk":
-            filename = input(Style.BRIGHT + "list? (contoh: list_ses.txt): " + Style.RESET_ALL)
+            filename = input(
+                Style.BRIGHT + "list? (contoh: list_ses.txt): " + Style.RESET_ALL
+            )
             cek_bulk_ses(filename)
 
     elif pilihan == "iam":
@@ -281,7 +323,9 @@ def main():
         tampil_logo()
         aws_key = input(Style.BRIGHT + "AWS Access Key: " + Style.RESET_ALL)
         aws_secret = input(Style.BRIGHT + "AWS Secret Key: " + Style.RESET_ALL)
-        aws_region = input(Style.BRIGHT + "AWS Region (contoh: us-east-1): " + Style.RESET_ALL)
+        aws_region = input(
+            Style.BRIGHT + "AWS Region (contoh: us-east-1): " + Style.RESET_ALL
+        )
         status, result = cek_aws_iam_permission(aws_key, aws_secret, aws_region)
         simpan_output("res_iam", status, result)
 
@@ -290,9 +334,15 @@ def main():
         tampil_logo()
         aws_key = input(Style.BRIGHT + "AWS Access Key: " + Style.RESET_ALL)
         aws_secret = input(Style.BRIGHT + "AWS Secret Key: " + Style.RESET_ALL)
-        aws_region = input(Style.BRIGHT + "AWS Region (contoh: us-east-1): " + Style.RESET_ALL)
-        test_email = input(Style.BRIGHT + "Email tujuan untuk tes kirim: " + Style.RESET_ALL)
-        status, result = create_smtp_and_test_email(aws_key, aws_secret, aws_region, test_email)
+        aws_region = input(
+            Style.BRIGHT + "AWS Region (contoh: us-east-1): " + Style.RESET_ALL
+        )
+        test_email = input(
+            Style.BRIGHT + "Email tujuan untuk tes kirim: " + Style.RESET_ALL
+        )
+        status, result = create_smtp_and_test_email(
+            aws_key, aws_secret, aws_region, test_email
+        )
         simpan_output("res_smtp", status, result)
 
     elif pilihan == "keluar":
@@ -302,46 +352,72 @@ def main():
         print(Fore.RED + Style.BRIGHT + "Pilihan gak valid!" + Style.RESET_ALL)
         main()
 
+
 def simpan_output(folder, status, result):
     if not os.path.exists(folder):
         os.makedirs(folder)
-    
+
     file = "mantap.txt" if status else "ampas.txt"
-    with open(os.path.join(folder, file), 'a') as f:
+    with open(os.path.join(folder, file), "a") as f:
         f.write(result + "\n")
+
 
 def cek_bulk_sendgrid(filename):
     try:
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             for line in f:
                 apikey = line.strip()
                 status, result = cek_sendgrid_kuota(apikey)
                 simpan_output("res_sendgrid", status, result)
     except FileNotFoundError:
-        print(Fore.RED + f"File {filename} gaada. Periksa lagi nama file nya!" + Fore.RESET)
-        cek_bulk_sendgrid(input(Style.BRIGHT + "list? (contoh: list_sendgrid.txt): " + Style.RESET_ALL))
+        print(
+            Fore.RED
+            + f"File {filename} gaada. Periksa lagi nama file nya!"
+            + Fore.RESET
+        )
+        cek_bulk_sendgrid(
+            input(
+                Style.BRIGHT + "list? (contoh: list_sendgrid.txt): " + Style.RESET_ALL
+            )
+        )
+
 
 def cek_bulk_twilio(filename):
     try:
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             for line in f:
-                account_sid, auth_token = line.strip().split(':')
+                account_sid, auth_token = line.strip().split(":")
                 status, result = cek_twilio_info(account_sid, auth_token)
                 simpan_output("res_twilio", status, result)
     except FileNotFoundError:
-        print(Fore.RED + f"File {filename} gaada. Periksa lagi nama file nya!" + Fore.RESET)
-        cek_bulk_twilio(input(Style.BRIGHT + "list? (contoh: list_twilio.txt): " + Style.RESET_ALL))
+        print(
+            Fore.RED
+            + f"File {filename} gaada. Periksa lagi nama file nya!"
+            + Fore.RESET
+        )
+        cek_bulk_twilio(
+            input(Style.BRIGHT + "list? (contoh: list_twilio.txt): " + Style.RESET_ALL)
+        )
+
 
 def cek_bulk_ses(filename):
     try:
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             for line in f:
-                aws_key, aws_secret, aws_region = line.strip().split(':')
+                aws_key, aws_secret, aws_region = line.strip().split(":")
                 status, result = cek_aws_ses_limit(aws_key, aws_secret, aws_region)
                 simpan_output("res_amzses", status, result)
     except FileNotFoundError:
-        print(Fore.RED + f"File {filename} gaada. Periksa lagi nama file nya!" + Fore.RESET)
-        cek_bulk_ses(input(Style.BRIGHT + "list? (contoh: list_ses.txt): " + Style.RESET_ALL))
+        print(
+            Fore.RED
+            + f"File {filename} gaada. Periksa lagi nama file nya!"
+            + Fore.RESET
+        )
+        cek_bulk_ses(
+            input(Style.BRIGHT + "list? (contoh: list_ses.txt): " + Style.RESET_ALL)
+        )
+
 
 if __name__ == "__main__":
     main()
+        
