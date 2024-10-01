@@ -26,7 +26,7 @@
    Clone repositori ini ke direktori lokal Anda:
 
    ```bash
-   git clone https://github.com/username/FuCH3CKeR.git
+   git clone https://github.com/adtyaff/FuCH3CKeR.git
    cd FuCH3CKeR
    ```
  
