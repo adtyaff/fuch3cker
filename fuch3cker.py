@@ -30,7 +30,7 @@ def reset_clear():
 
 def cek_sendgrid_kuota(apikey, verbose=True):
     if verbose:
-        print(f"{Fore.CYAN}[INFO] Checking.... {Style.RESET_ALL}")
+        print(f"{Fore.CYAN}[INFO] Checking SendGrid API Key.... {Style.RESET_ALL}")
 
     url = "https://api.sendgrid.com/v3/user/credits"
     headers = {"Authorization": f"Bearer {apikey}", "Content-Type": "application/json"}
@@ -53,29 +53,31 @@ def cek_sendgrid_kuota(apikey, verbose=True):
         result += "-" * 40
 
         if verbose:
-            print(f"{Fore.GREEN}[SIP] API Key SendGrid beres dicek!{Style.RESET_ALL}")
+            print(
+                f"{Fore.GREEN}[SIP] SendGrid API Key berhasil dicek!{Style.RESET_ALL}"
+            )
         return True, result
 
     except requests.exceptions.HTTPError as e:
         status_code = e.response.status_code
         error_message = (
-            f"{Style.BRIGHT}Waduh! Gagal cek API Key SendGrid!\n"
-            f"{Style.BRIGHT}ApiKey: {Style.RESET_ALL}{apikey}\n"
-            f"{Style.BRIGHT}Status Code: {Style.RESET_ALL}{status_code}\n"
-            f"{Style.BRIGHT}Pesan Error: {Style.RESET_ALL}{e.response.text}\n"
+            f"{Style.BRIGHT}SendGrid API Key: {Style.RESET_ALL}{apikey}\n"
+            f"Status Code: {status_code}\n"
+            f"Pesan Error: {e.response.text}\n"
+            f"How To Fix?: https://sendgrid.com/docs/API_Reference/Web_API_v3/How_To_Use_The_Web_API_v3/{status_code}\n"
         )
         error_message += "-" * 40
 
         if verbose:
             print(
-                f"{Fore.RED}[ERROR] Ada masalah! Status Code {status_code}{Style.RESET_ALL}"
+                f"{Fore.RED}[ERROR] Masalah pada API Key! Status Code {status_code}{Style.RESET_ALL}"
             )
         return False, error_message
 
 
 def cek_twilio_info(account_sid, auth_token, verbose=True):
     if verbose:
-        print(f"{Fore.CYAN}[INFO] Checking.... {Style.RESET_ALL}")
+        print(f"{Fore.CYAN}[INFO] Checking Twilio Account SID.... {Style.RESET_ALL}")
 
     try:
         client = Client(account_sid, auth_token)
@@ -109,28 +111,28 @@ def cek_twilio_info(account_sid, auth_token, verbose=True):
         result += "-" * 40
 
         if verbose:
-            print(f"{Fore.GREEN}[SIP] Twilio udah beres dicek!{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}[SIP] Twilio info berhasil dicek!{Style.RESET_ALL}")
         return True, result
 
     except TwilioRestException as e:
         error_message = (
-            f"{Style.BRIGHT}Waduh! Gagal Ambil Data Twilio!\n"
-            f"{Style.BRIGHT}Account SID: {Style.RESET_ALL}{account_sid}\n"
-            f"{Style.BRIGHT}Auth Token: {Style.RESET_ALL}{auth_token}\n"
-            f"{Style.BRIGHT}Error Code: {Style.RESET_ALL}{getattr(e, 'code', 'N/A')}\n"
-            f"{Style.BRIGHT}Status Code: {Style.RESET_ALL}{e.status}\n"
-            f"{Style.BRIGHT}Pesan Error: {Style.RESET_ALL}{e.msg}\n"
+            f"{Style.BRIGHT}Twilio Account SID: {Style.RESET_ALL}{account_sid}\n"
+            f"Status Code: {e.status}\n"
+            f"Pesan Error: {e.msg}\n"
+            f"How To Fix?: https://www.twilio.com/docs/errors/{e.status}\n"
         )
         error_message += "-" * 40
 
         if verbose:
-            print(f"{Fore.RED}[ERROR] Masalah! Status Code {e.status}{Style.RESET_ALL}")
+            print(
+                f"{Fore.RED}[ERROR] Masalah dengan Twilio! Status Code {e.status}{Style.RESET_ALL}"
+            )
         return False, error_message
 
 
 def cek_aws_ses_limit(aws_access_key, aws_secret_key, region, verbose=True):
     if verbose:
-        print(f"{Fore.CYAN}[INFO] Checking.... {Style.RESET_ALL}")
+        print(f"{Fore.CYAN}[INFO] Checking AWS SES.... {Style.RESET_ALL}")
 
     try:
         client = boto3.client(
@@ -155,23 +157,77 @@ def cek_aws_ses_limit(aws_access_key, aws_secret_key, region, verbose=True):
         result += "-" * 40
 
         if verbose:
-            print(f"{Fore.GREEN}[SIP] AWS SES sukses dicek!{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}[SIP] AWS SES berhasil dicek!{Style.RESET_ALL}")
         return True, result
 
     except ClientError as e:
         error_message = (
-            f"{Style.BRIGHT}Waduh! Gagal Ambil Data AWS SES!\n"
             f"{Style.BRIGHT}AWS Access Key: {Style.RESET_ALL}{aws_access_key}\n"
-            f"{Style.BRIGHT}AWS Secret Key: {Style.RESET_ALL}{aws_secret_key}\n"
-            f"{Style.BRIGHT}Region: {Style.RESET_ALL}{region}\n"
-            f"{Style.BRIGHT}Error Code: {Style.RESET_ALL}{e.response['Error']['Code']}\n"
-            f"{Style.BRIGHT}Pesan Error: {Style.RESET_ALL}{e.response['Error']['Message']}\n"
+            f"Status Code: {e.response['Error']['Code']}\n"
+            f"Pesan Error: {e.response['Error']['Message']}\n"
+            f"How To Fix?: https://docs.aws.amazon.com/ses/latest/APIReference/CommonErrors.html#{e.response['Error']['Code']}\n"
         )
         error_message += "-" * 40
 
         if verbose:
             print(
-                f"{Fore.RED}[ERROR] Gagal, Error: {e.response['Error']['Code']}{Style.RESET_ALL}"
+                f"{Fore.RED}[ERROR] Masalah dengan AWS SES! Error: {e.response['Error']['Code']}{Style.RESET_ALL}"
+            )
+        return False, error_message
+
+
+def cek_aws_iam_permission(aws_access_key, aws_secret_key, region, verbose=True):
+    if verbose:
+        print(f"{Fore.CYAN}[INFO] Checking AWS IAM Permissions...{Style.RESET_ALL}")
+
+    try:
+        client = boto3.client(
+            "iam",
+            aws_access_key_id=aws_access_key,
+            aws_secret_access_key=aws_secret_key,
+            region_name=region,
+        )
+
+        users = client.list_users()
+
+        result = f"AWS Access Key: {aws_access_key}\nAWS Secret Key: {aws_secret_key}\nRegion: {region}\n\n"
+        for user in users["Users"]:
+            result += (
+                f"Username: {user['UserName']}\n"
+                f"UserID: {user['UserId']}\n"
+                f"ARN: {user['Arn']}\n"
+                f"CreateDate: {user['CreateDate']}\n"
+                f"PasswordLastUsed: {user.get('PasswordLastUsed', 'Tidak tersedia')}\n"
+            )
+
+            access_keys = client.list_access_keys(UserName=user["UserName"])
+            result += "AWS Access Keys:\n"
+            for key in access_keys["AccessKeyMetadata"]:
+                result += (
+                    f"  - AccessKeyId: {key['AccessKeyId']}\n"
+                    f"    Status: {key['Status']}\n"
+                    f"    CreateDate: {key['CreateDate']}\n"
+                )
+            result += "-" * 40 + "\n"
+
+        if verbose:
+            print(
+                f"{Fore.GREEN}[SUCCESS] AWS IAM Permissions successfully checked!{Style.RESET_ALL}"
+            )
+        return True, result
+
+    except ClientError as e:
+        error_message = (
+            f"{Style.BRIGHT}AWS Access Key: {Style.RESET_ALL}{aws_access_key}\n"
+            f"Status Code: {e.response['Error']['Code']}\n"
+            f"Pesan Error: {e.response['Error']['Message']}\n"
+            f"How To Fix?: https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_errors.html#{e.response['Error']['Code']}\n"
+        )
+        error_message += "-" * 40
+
+        if verbose:
+            print(
+                f"{Fore.RED}[ERROR] AWS IAM Permission check failed! Error: {e.response['Error']['Code']}{Style.RESET_ALL}"
             )
         return False, error_message
 
@@ -180,7 +236,9 @@ def create_smtp_and_test_email(
     aws_access_key, aws_secret_key, region, test_email, verbose=True
 ):
     if verbose:
-        print(f"{Fore.CYAN}[INFO] Creating.... {Style.RESET_ALL}")
+        print(
+            f"{Fore.CYAN}[INFO] Creating AWS SES SMTP and testing.... {Style.RESET_ALL}"
+        )
 
     try:
         client = boto3.client(
@@ -222,12 +280,10 @@ def create_smtp_and_test_email(
 
     except ClientError as e:
         error_message = (
-            f"{Style.BRIGHT}Waduh! Gagal Buat SMTP AWS SES!\n"
             f"{Style.BRIGHT}AWS Access Key: {Style.RESET_ALL}{aws_access_key}\n"
-            f"{Style.BRIGHT}AWS Secret Key: {Style.RESET_ALL}{aws_secret_key}\n"
-            f"{Style.BRIGHT}Region: {Style.RESET_ALL}{region}\n"
-            f"{Style.BRIGHT}Error Code: {Style.RESET_ALL}{e.response['Error']['Code']}\n"
-            f"{Style.BRIGHT}Pesan Error: {Style.RESET_ALL}{e.response['Error']['Message']}\n"
+            f"Status Code: {e.response['Error']['Code']}\n"
+            f"Pesan Error: {e.response['Error']['Message']}\n"
+            f"How To Fix?: https://docs.aws.amazon.com/ses/latest/APIReference/CommonErrors.html#{e.response['Error']['Code']}\n"
         )
         error_message += "-" * 40
 
