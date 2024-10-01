@@ -1,6 +1,6 @@
-# FuCH3KeR
+# FuCH3CKeR
 
-**FuCH3KeR** adalah alat *all-in-one* yang memudahkan kamu untuk mengecek kredensial dari berbagai platform seperti **SendGrid**, **Twilio**, **AWS SES**, dan **IAM**. Nggak cuma cek API key, FuCH3KeR juga bisa ngecek kuota, ngirim email, bahkan bikin kredensial SMTP AWS SES secara otomatis plus tes kirim email! Alat ini cocok banget buat developer atau admin yang pengen hidup lebih mudah. 😎
+**FuCH3CKeR** adalah alat *all-in-one* yang memudahkan kamu untuk mengecek kredensial dari berbagai platform seperti **SendGrid**, **Twilio**, **AWS SES**, dan **IAM**. Nggak cuma cek API key, FuCH3CKeR juga bisa ngecek kuota, ngirim email, bahkan bikin kredensial SMTP AWS SES secara otomatis plus tes kirim email! Alat ini cocok banget buat developer atau admin yang pengen hidup lebih mudah. 😎
 
 ## ✨ Fitur Keren
 
@@ -26,8 +26,8 @@
    Clone repositori ini ke direktori lokal Anda:
 
    ```bash
-   git clone https://github.com/username/FuCH3KeR.git
-   cd FuCH3KeR
+   git clone https://github.com/username/FuCH3CKeR.git
+   cd FuCH3CKeR
    ```
  
 2. **Run Program**
