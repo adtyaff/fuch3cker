@@ -2,7 +2,7 @@
 
 **FuCH3CKeR** adalah alat *all-in-one* yang memudahkan kamu untuk mengecek kredensial dari berbagai platform seperti **SendGrid**, **Twilio**, **AWS SES**, dan **IAM**. Nggak cuma cek API key, FuCH3CKeR juga bisa ngecek kuota, ngirim email, bahkan bikin kredensial SMTP AWS SES secara otomatis plus tes kirim email! Alat ini cocok banget buat developer atau admin yang pengen hidup lebih mudah. 😎
 
-## ✨ Fitur Keren
+## ✨ Fitur
 
 - 🚀 **Cek Limit SendGrid** dengan sekali klik.
 - 💬 **Lihat Detail Akun Twilio** seperti saldo dan nomor telepon aktif.
