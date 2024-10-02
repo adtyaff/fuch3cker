@@ -11,7 +11,7 @@
 - **Cek Balance Amazon SES**
 - **Cek IAM Permission**
 - **Buat Kredensial SMTP AWS SES**
-- 📂 **Dukungan Bulk Check**: Cek kredensial secara massal dari file.
+- **Dukungan Bulk Check**: Cek kredensial secara massal dari file.
 ## Persyaratan
 
 - **Python 3.7+**
