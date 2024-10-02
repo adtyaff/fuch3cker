@@ -28,6 +28,51 @@ def reset_clear():
         _ = os.system("cls")
 
 
+# Nexmo Balance Checker
+def cek_nexmo_balance(api_key, api_secret, verbose=True):
+    if verbose:
+        print(f"{Fore.CYAN}[INFO] Checking Nexmo Account Balance.... {Style.RESET_ALL}")
+
+    url = "https://rest.nexmo.com/account/get-balance"
+    params = {"api_key": api_key, "api_secret": api_secret}
+
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        balance = data.get("value", "Tidak tersedia")
+        auto_reload = data.get("autoReload", "Tidak tersedia")
+
+        result = (
+            f"[ Account Balance ]\n"
+            f"Value: {balance}\n"
+            f"Auto Reload: {auto_reload}\n"
+            f"-" * 40
+        )
+
+        if verbose:
+            print(
+                f"{Fore.GREEN}[SIP] Nexmo Account Balance berhasil dicek!{Style.RESET_ALL}"
+            )
+        return True, result
+
+    except requests.exceptions.HTTPError as e:
+        status_code = e.response.status_code
+        error_message = (
+            f"Nexmo API Key: {api_key}\n"
+            f"Status Code: {status_code}\n"
+            f"Pesan Error: {e.response.text}\n"
+            f"-" * 40
+        )
+
+        if verbose:
+            print(
+                f"{Fore.RED}[ERROR] Masalah dengan Nexmo! Status Code {status_code}{Style.RESET_ALL}"
+            )
+        return False, error_message
+
+
 def cek_sendgrid_kuota(apikey, verbose=True):
     if verbose:
         print(f"{Fore.CYAN}[INFO] Checking SendGrid API Key.... {Style.RESET_ALL}")
@@ -176,6 +221,38 @@ def cek_aws_ses_limit(aws_access_key, aws_secret_key, region, verbose=True):
         return False, error_message
 
 
+def cek_stripe_apikey(secret_key, verbose=True):
+    if verbose:
+        print(f"{Fore.CYAN}[INFO] Checking Stripe API Key.... {Style.RESET_ALL}")
+
+    url = "https://api.stripe.com/v1/charges"
+    headers = {"Authorization": f"Bearer {secret_key}"}
+
+    try:
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            result = f"{secret_key} [ LIVE ]"
+            if verbose:
+                print(f"{Fore.GREEN}[SIP] Stripe API Key Valid!{Style.RESET_ALL}")
+            return True, result
+        else:
+            raise requests.exceptions.HTTPError(response=response)
+
+    except requests.exceptions.HTTPError as e:
+        status_code = e.response.status_code
+        error_message = (
+            f"{secret_key} [ DIE ]\n"
+            f"Status Code: {status_code}\n"
+            f"Pesan Error: {e.response.text}\n"
+        )
+        if verbose:
+            print(
+                f"{Fore.RED}[ERROR] Stripe API Key Tidak Valid! Status Code {status_code}{Style.RESET_ALL}"
+            )
+        return False, error_message
+
+
 def cek_aws_iam_permission(aws_access_key, aws_secret_key, region, verbose=True):
     if verbose:
         print(f"{Fore.CYAN}[INFO] Checking AWS IAM Permissions...{Style.RESET_ALL}")
@@ -298,16 +375,22 @@ def main():
     reset_clear()
     tampil_logo()
     print(Fore.YELLOW + Style.BRIGHT + "Mau cek apa?" + Style.RESET_ALL)
-    print(f"Ketik '{Fore.YELLOW}{Style.BRIGHT}sg{Style.RESET_ALL}' untuk cek SendGrid")
-    print(f"Ketik '{Fore.YELLOW}{Style.BRIGHT}tw{Style.RESET_ALL}' untuk cek Twilio")
+    print(f"Ketik '{Fore.YELLOW}{Style.BRIGHT}sg{Style.RESET_ALL}' untuk cek SENDGRID BALANCE")
+    print(f"Ketik '{Fore.YELLOW}{Style.BRIGHT}tw{Style.RESET_ALL}' untuk cek TWILIO BALANCE")
     print(
-        f"Ketik '{Fore.YELLOW}{Style.BRIGHT}ses{Style.RESET_ALL}' untuk cek Amazon SES"
+        f"Ketik '{Fore.YELLOW}{Style.BRIGHT}nx{Style.RESET_ALL}' untuk cek NEXMO BALANCE"
     )
     print(
-        f"Ketik '{Fore.YELLOW}{Style.BRIGHT}iam{Style.RESET_ALL}' untuk cek IAM Permissions"
+        f"Ketik '{Fore.YELLOW}{Style.BRIGHT}sk{Style.RESET_ALL}' untuk cek STRIPE API KEY"
     )
     print(
-        f"Ketik '{Fore.YELLOW}{Style.BRIGHT}cses{Style.RESET_ALL}' untuk buat kredensial SMTP SES + Test Send Email"
+        f"Ketik '{Fore.YELLOW}{Style.BRIGHT}ses{Style.RESET_ALL}' untuk cek AMAZON SES BALANCE"
+    )
+    print(
+        f"Ketik '{Fore.YELLOW}{Style.BRIGHT}iam{Style.RESET_ALL}' untuk cek IAM PERMISSIONS"
+    )
+    print(
+        f"Ketik '{Fore.YELLOW}{Style.BRIGHT}cses{Style.RESET_ALL}' untuk buat SMTP SES + TEST SEND EMAIL"
     )
     print(f"Ketik '{Fore.RED}{Style.BRIGHT}keluar{Style.RESET_ALL}' kalo mau cabut")
 
@@ -332,6 +415,45 @@ def main():
                 Style.BRIGHT + "list? (contoh: list_sendgrid.txt): " + Style.RESET_ALL
             )
             cek_bulk_sendgrid(filename)
+
+    elif pilihan == "nx":
+        reset_clear()
+        tampil_logo()
+        opsi = input(
+            Style.BRIGHT
+            + "Mau cek 'ecer' satu-satu, atau 'bulk' langsung dari list?: "
+            + Style.RESET_ALL
+        ).lower()
+        if opsi == "ecer":
+            api_key = input(Style.BRIGHT + "Nexmo API Key: " + Style.RESET_ALL)
+            api_secret = input(Style.BRIGHT + "Nexmo API Secret: " + Style.RESET_ALL)
+            status, result = cek_nexmo_balance(api_key, api_secret)
+            simpan_output("res_nexmo", status, result)
+        elif opsi == "bulk":
+            filename = input(
+                Style.BRIGHT + "list? (contoh: list_nexmo.txt): " + Style.RESET_ALL
+            )
+            cek_bulk_nexmo(filename)
+
+    elif pilihan == "sk":
+        reset_clear()
+        tampil_logo()
+    opsi = input(
+        Style.BRIGHT
+        + "Mau cek 'ecer' satu-satu, atau 'bulk' langsung dari list?: "
+        + Style.RESET_ALL
+    ).lower()
+    if opsi == "ecer":
+        secret_key = input(
+            Style.BRIGHT + "Stripe Secret Key (contoh: sk_blabla): " + Style.RESET_ALL
+        )
+        status, result = cek_stripe_apikey(secret_key)
+        simpan_output("res_stripe", status, result)
+    elif opsi == "bulk":
+        filename = input(
+            Style.BRIGHT + "list? (contoh: list_stripe.txt): " + Style.RESET_ALL
+        )
+        cek_bulk_stripe(filename)
 
     elif pilihan == "tw":
         reset_clear()
@@ -403,9 +525,6 @@ def main():
 
     elif pilihan == "keluar":
         print(Fore.RED + Style.BRIGHT + "Oke, Keluar!" + Style.RESET_ALL)
-        return
-    else:
-        print(Fore.RED + Style.BRIGHT + "Pilihan gak valid!" + Style.RESET_ALL)
         main()
 
 
@@ -456,6 +575,24 @@ def cek_bulk_twilio(filename):
         )
 
 
+def cek_bulk_stripe(filename):
+    try:
+        with open(filename, "r") as f:
+            for line in f:
+                secret_key = line.strip()
+                status, result = cek_stripe_apikey(secret_key)
+                simpan_output("res_stripe", status, result)
+    except FileNotFoundError:
+        print(
+            Fore.RED
+            + f"File {filename} gaada. Periksa lagi nama file nya!"
+            + Fore.RESET
+        )
+        cek_bulk_stripe(
+            input(Style.BRIGHT + "list? (contoh: list_stripe.txt): " + Style.RESET_ALL)
+        )
+
+
 def cek_bulk_ses(filename):
     try:
         with open(filename, "r") as f:
@@ -474,6 +611,23 @@ def cek_bulk_ses(filename):
         )
 
 
+def cek_bulk_nexmo(filename):
+    try:
+        with open(filename, "r") as f:
+            for line in f:
+                api_key, api_secret = line.strip().split(":")
+                status, result = cek_nexmo_balance(api_key, api_secret)
+                simpan_output("res_nexmo", status, result)
+    except FileNotFoundError:
+        print(
+            Fore.RED
+            + f"File {filename} gaada. Periksa lagi nama file nya!"
+            + Fore.RESET
+        )
+        cek_bulk_nexmo(
+            input(Style.BRIGHT + "list? (contoh: list_nexmo.txt): " + Style.RESET_ALL)
+        )
+
+
 if __name__ == "__main__":
     main()
-        
